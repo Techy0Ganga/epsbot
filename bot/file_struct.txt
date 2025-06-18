@@ -1,11 +1,31 @@
-bot/
-├── agents/
-│   ├── gemini_agent.py         # Handles Gemini API calls
-├── services/
-│   ├── vector_store.py         # Handles Chroma & embedding logic
-│   └── fallback_bot.py         # Handles fallback logic for out-of-scope queries
-├── prompts/
-│   └── rag_template.txt        # Prompt template for Gemini
-├── main.py                     # Entry point for query processing
-├── config.py                   # API keys, thresholds
-└── requirements.txt
+.
+├── agents
+├── chroma_store
+├── config.py
+├── file_struct.txt
+├── __init__.py
+├── main.py
+├── prompts
+│   └── rag_template.txt
+├── requirements.txt
+├── services
+│   ├── embedding_api.py
+│   ├── fallback_bot.py
+│   ├── __init__.py
+│   ├── __pycache__
+│   └── vector_store.py
+├── test_pdfs
+│   └── Comparison_with_human.pdf
+├── tests
+│   └── test_vector_store.py
+├── utils
+│   ├── __init__.py
+│   ├── pdf_loader.py
+│   └── __pycache__
+└── venv
+    ├── bin
+    ├── include
+    ├── lib
+    ├── lib64 -> lib
+    ├── pyvenv.cfg
+    └── share

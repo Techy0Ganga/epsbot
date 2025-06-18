@@ -1,0 +1,12 @@
+{
+  "name": "mentor-bot",
+  "version": "1.0.0",
+  "description": "Frontend for mentor bot",
+  "license": "ISC",
+  "author": "aswin",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
