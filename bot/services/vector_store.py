@@ -1,7 +1,7 @@
 from langchain_community.vectorstores import Chroma
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.docstore.document import Document
-from services.embedding_api import BGEAPIEmbeddings
+from bot.services.embedding_api import BGEAPIEmbeddings
 import os
 
 class VectorStoreService:
