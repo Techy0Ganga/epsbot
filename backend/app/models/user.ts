@@ -4,6 +4,10 @@ import { compose } from '@adonisjs/core/helpers'
 import { BaseModel, column } from '@adonisjs/lucid/orm'
 import { withAuthFinder } from '@adonisjs/auth/mixins/lucid'
 import { DbAccessTokensProvider } from '@adonisjs/auth/access_tokens'
+import { hasOne } from '@adonisjs/lucid/orm'
+import type { HasOne } from '@adonisjs/lucid/types/relations'
+import StudentProfile from '#models/student_profile'
+import MentorProfile from '#models/mentor_profile'
 
 const AuthFinder = withAuthFinder(() => hash.use('scrypt'), {
   uids: ['email'],
@@ -31,6 +35,12 @@ export default class User extends compose(BaseModel, AuthFinder) {
 
   @column()
   declare role: 'student' | 'mentor'
+
+  @hasOne(() => StudentProfile)
+  declare studentProfile: HasOne<typeof StudentProfile>
+
+  @hasOne(() => MentorProfile)
+  declare mentorProfile: HasOne<typeof MentorProfile>
 
   static accessTokens = DbAccessTokensProvider.forModel(this, {
     expiresIn: '30 days',

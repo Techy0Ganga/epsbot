@@ -10,29 +10,39 @@ export default class AuthController {
 
     //register user
     async register({ request, response }: HttpContext) {
-        const registerSchema = vine.object({
-          email: vine.string().email(),
-          password: vine.string().minLength(6),
-          role: vine.enum(['student', 'mentor']),
-        })
-    
-        const { email, password, role } = await vine.validate({
-          schema: registerSchema,
-          data: request.only(['email', 'password', 'role']),
-        })
-    
-        // Create the user
-        const user = await User.create({ email, password, role })
-    
-        // Generate access token
-        const token = await User.accessTokens.create(user)
-    
-        return response.created({
-          message: 'User registered successfully',
-          user,
-          token,
-        })
+      const registerSchema = vine.object({
+        email: vine.string().email(),
+        password: vine.string().minLength(6),
+        role: vine.enum(['student', 'mentor'] as const),
+        grade: vine.string().optional(),
+        className: vine.string().optional(),
+        department: vine.string().optional(),
+        experience: vine.number().optional(),
+      })
+  
+      const {
+        email,
+        password,
+        role,
+        grade,
+        className,
+        department,
+        experience,
+      } = await vine.validate({
+        schema: registerSchema,
+        data: request.all(),
+      })
+  
+      const user = await User.create({ email, password, role })
+  
+      if (role === 'student') {
+        await user.related('studentProfile').create({ grade, className })
+      } else if (role === 'mentor') {
+        await user.related('mentorProfile').create({ department, experience })
       }
+  
+      return response.created({ user })
+    }
 
 //login
   async login({ request, response }: HttpContext) {
