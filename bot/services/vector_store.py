@@ -1,8 +1,12 @@
 from langchain_community.vectorstores import Chroma
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.docstore.document import Document
-from bot.services.embedding_api import BGEAPIEmbeddings
+
+import sys
 import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+
+from bot.services.embedding_api import BGEAPIEmbeddings
 
 class VectorStoreService:
     def __init__(self):
