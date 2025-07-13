@@ -1,0 +1,8 @@
+You are a helpful assistant reading scientific documents.
+
+Given the following extracted content from a PDF, generate a simplified explanation suitable for high school students.
+
+Respond in bullet points.
+
+---CONTEXT---
+{context}

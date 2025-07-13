@@ -1,39 +1,42 @@
-import pytest
 import sys
 import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
-from bot.services.vector_store import VectorStoreService
+
 from bot.utils.pdf_loader import load_pdf_documents_with_metadata
+from bot.services.vector_store import VectorStoreService
+# from bot.Agents.gemini_wrapper import ask_gemini
 
+# Load PDF content
+docs = load_pdf_documents_with_metadata("./test_pdfs/Comparison_with_human.pdf")
 
-@pytest.fixture(scope="module")
-def vector_service():
-    assert os.getenv("HF_TOKEN"), "HF_TOKEN must be set in your environment"
-    return VectorStoreService()
+# Initialize vector store and load docs
+vs = VectorStoreService()
+vs.load_documents([d.page_content for d in docs], metadata=[d.metadata for d in docs])
 
+# Run a test query
+results = vs.query("What is this paper about?")
+print("Top Result:", results[0].page_content[:200])  # Just show first 200 chars
 
-@pytest.fixture(scope="module")
-def pdf_docs():
-    path = "bot/test_pdfs/Comparison_with_human.pdf"
-    assert os.path.exists(path), f"Test PDF not found at {path}"
-    return load_pdf_documents_with_metadata(path)
+# Query RAG
+query = "What is this paper about?"
+results = vs.query(query)
 
+# Combine retrieved documents
+retrieved_text = "\n\n".join([doc.page_content for doc in results])
 
-def test_load_documents(vector_service, pdf_docs):
-    texts = [doc.page_content for doc in pdf_docs]
-    metadata = [doc.metadata for doc in pdf_docs]
-    
-    vector_service.load_documents(texts, metadata=metadata)
-    assert vector_service.db is not None
+from bot.Agents.gemini_wrapper import ask_gemini_from_file
 
+# Run RAG query
+query = "What is this paper about?"
+results = vs.query(query)
+retrieved_text = "\n\n".join([doc.page_content for doc in results])
 
-def test_vector_search(vector_service):
-    query = "What are actuators?"
-    results = vector_service.query(query, top_k=2)
+# Path to your prompt
+prompt_path = "./prompts/rag_template.txt"
 
-    assert results, "No results returned from similarity search"
+# Generate response
+gemini_response = ask_gemini_from_file(retrieved_text, prompt_path)
 
-    for doc in results:
-        assert isinstance(doc.page_content, str)
-        print("\n🔍 Top result:\n", doc.page_content[:300])
+print("🧠 Gemini says:\n", gemini_response)
+
