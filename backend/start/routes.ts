@@ -16,7 +16,9 @@ const BotController = () => import('#controllers/bots_controller')
 
 router.post('/register', [AuthController, 'register'])
 router.post('/login', [AuthController, 'login'])
-router.post('/logout', [AuthController, 'logout']).middleware([middleware.auth()])
+router
+  .post('/logout', [AuthController, 'logout'])
+  .use(middleware.auth({ guards: ['api'] }))
 
 router.get('/me', async ({ auth, response }) => {
   await auth.use('api').check()

@@ -19,6 +19,8 @@ export default class extends BaseSchema {
       // Mentor-specific fields
       table.string('department')
       table.integer('experience') // ⬅️ NOT bio anymore
+      table.string('school').notNullable()
+
 
       // Timestamps
       table.timestamp('created_at', { useTz: true }).defaultTo(this.now())

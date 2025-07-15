@@ -15,6 +15,9 @@ export default class MentorProfile extends BaseModel {
   @column()
   declare experience: number
 
+  @column()
+  declare school: string
+
   @belongsTo(() => User)
   declare user: BelongsTo<typeof User>
 }

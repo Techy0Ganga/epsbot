@@ -5,6 +5,7 @@ import type { HttpContext } from '@adonisjs/core/http'
 import vine from '@vinejs/vine'
 import User from '#models/user'
 import db from '@adonisjs/lucid/services/db'
+import Hash from '@adonisjs/core/services/hash'
 
 export default class AuthController {
 
@@ -16,6 +17,7 @@ export default class AuthController {
         role: vine.enum(['student', 'mentor'] as const),
         grade: vine.string().optional(),
         className: vine.string().optional(),
+        school: vine.string().optional(),
         department: vine.string().optional(),
         experience: vine.number().optional(),
       })
@@ -26,6 +28,7 @@ export default class AuthController {
         role,
         grade,
         className,
+        school,
         department,
         experience,
       } = await vine.validate({
@@ -36,7 +39,7 @@ export default class AuthController {
       const user = await User.create({ email, password, role })
   
       if (role === 'student') {
-        await user.related('studentProfile').create({ grade, className })
+        await user.related('studentProfile').create({ grade, className, school })
       } else if (role === 'mentor') {
         await user.related('mentorProfile').create({ department, experience })
       }
@@ -62,35 +65,19 @@ export default class AuthController {
     return response.ok({ user, token })
   }
 //log out
-async logout({ auth, request, response }: HttpContext) {
-    const user = auth.use('api').user
-  
-    if (!user) {
-      return response.unauthorized({ error: 'Not authenticated' })
-    }
-  
-    // Extract token string from header
-    const authHeader = request.header('Authorization')
-    if (!authHeader?.startsWith('Bearer oat_')) {
-      return response.badRequest({ error: 'Invalid token format' })
-    }
-  
-    const rawToken = authHeader.replace('Bearer ', '').trim()
-  
-    // Query the database manually to find token record
-    const tokenRow = await db
-      .from('auth_access_tokens')
-      .where('user_id', user.id)
-      .andWhere('token', rawToken)
-      .first()
-  
-    if (!tokenRow) {
-      return response.notFound({ error: 'Token not found or already revoked' })
-    }
-  
-    // Delete it using its ID
-    await User.accessTokens.delete(user, tokenRow.id)
-  
-    return response.ok({ message: 'Logged out successfully' })
-  }
+async logout({ auth, response }: HttpContext) {
+  // Get a typed instance of the 'api' authenticator.
+  // Because the middleware was fixed, TypeScript now knows this is valid.
+  const api = auth.use('api')
+
+  // The 'auth' middleware guarantees that if this code runs, the user is authenticated.
+  // TypeScript now correctly infers that `currentAccessToken` exists.
+  const token = api.currentAccessToken!
+
+  // Delete the specific token that was used for this request.
+  await token.delete()
+
+  return response.ok({ message: 'Logged out successfully' })
+}
+
 }

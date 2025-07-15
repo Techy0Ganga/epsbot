@@ -15,6 +15,12 @@ export default class StudentProfile extends BaseModel {
   @column({ columnName: 'class_name' })
   declare className: string
 
+  @column()
+  declare progressSummary: string
+
+  @column()
+  declare school: string
+
   @belongsTo(() => User)
   declare user: BelongsTo<typeof User>
 }

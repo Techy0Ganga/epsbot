@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { defineConfig } from '@adonisjs/auth'
 import { tokensGuard, tokensUserProvider } from '@adonisjs/auth/access_tokens'
 import type { InferAuthenticators, InferAuthEvents, Authenticators } from '@adonisjs/auth/types'
@@ -8,7 +9,8 @@ const authConfig = defineConfig({
     api: tokensGuard({
       provider: tokensUserProvider({
         tokens: 'accessTokens',
-        model: () => import('#models/user')
+        model: () => import('#models/user') as Promise<{ default: typeof import('#models/user')['default'] }>
+
       }),
     }),
   },
