@@ -1,78 +1,93 @@
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { login as loginApi, register as registerApi } from '../utils/api'
+import type { RegisterPayload } from '../utils/api'
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+type Role = 'student' | 'mentor' | 'admin'
 
-interface AuthContextType {
-  userRole: 'student' | 'mentor' | 'admin' | null;
-  userInfo: {
-    name: string;
-    id: string;
-    grade?: string;
-    class?: string;
-  } | null;
-  login: (role: 'student' | 'mentor' | 'admin') => void;
-  logout: () => void;
-  isAuthenticated: boolean;
+interface UserInfo {
+  id: number
+  email: string
+  role: Role
+  fullName?: string
+  grade?: string
+  class?: string
+  department?: string
+  experience?: string
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+interface AuthContextType {
+  user: UserInfo | null
+  token: string | null
+  login: (email: string, password: string) => Promise<void>
+  register: (payload: RegisterPayload) => Promise<void> // we'll type this later
+  logout: () => void
+  isAuthenticated: boolean
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
+  const context = useContext(AuthContext)
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useAuth must be used within an AuthProvider')
   }
-  return context;
-};
+  return context
+}
 
 interface AuthProviderProps {
-  children: ReactNode;
+  children: ReactNode
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [userRole, setUserRole] = useState<'student' | 'mentor' | 'admin' | null>(null);
-  const [userInfo, setUserInfo] = useState<AuthContextType['userInfo']>(null);
+  const [user, setUser] = useState<UserInfo | null>(null)
+  const [token, setToken] = useState<string | null>(null)
 
-  const login = (role: 'student' | 'mentor' | 'admin') => {
-    setUserRole(role);
-    
-    // Mock user data based on role
-    const mockUserData = {
-      student: {
-        name: 'Alex Johnson',
-        id: 'STU001',
-        grade: 'Grade 8',
-        class: 'Class 8A'
-      },
-      mentor: {
-        name: 'Sarah Wilson',
-        id: 'MEN001',
-        class: 'Math Department'
-      },
-      admin: {
-        name: 'Dr. Michael Chen',
-        id: 'ADM001'
-      }
-    };
+  // 🔁 Load from localStorage on mount
+  useEffect(() => {
+    const savedToken = localStorage.getItem('token')
+    const savedUser = localStorage.getItem('user')
+    if (savedToken && savedUser) {
+      setToken(savedToken)
+      setUser(JSON.parse(savedUser))
+    }
+  }, [])
 
-    setUserInfo(mockUserData[role]);
-  };
+  // 🔐 Login
+  const login = async (email: string, password: string) => {
+    const res = await loginApi(email, password)
+    setToken(res.token)
+    setUser(res.user)
+    localStorage.setItem('token', res.token)
+    localStorage.setItem('user', JSON.stringify(res.user))
+  }
 
+  // 📝 Register
+  const register = async (payload: RegisterPayload) => {
+    const res = await registerApi(payload)
+    setToken(res.token)
+    setUser(res.user)
+    localStorage.setItem('token', res.token)
+    localStorage.setItem('user', JSON.stringify(res.user))
+  }
+
+  // 🚪 Logout
   const logout = () => {
-    setUserRole(null);
-    setUserInfo(null);
-  };
-
-  const isAuthenticated = userRole !== null;
+    setToken(null)
+    setUser(null)
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+  }
 
   return (
     <AuthContext.Provider value={{
-      userRole,
-      userInfo,
+      user,
+      token,
       login,
+      register,
       logout,
-      isAuthenticated
+      isAuthenticated: !!token,
     }}>
       {children}
     </AuthContext.Provider>
-  );
-};
+  )
+}

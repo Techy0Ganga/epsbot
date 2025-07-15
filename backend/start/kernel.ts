@@ -11,6 +11,7 @@
 
 import router from '@adonisjs/core/services/router'
 import server from '@adonisjs/core/services/server'
+import cors from '@adonisjs/cors/cors_middleware'
 
 /**
  * The error handler is used to convert an exception
@@ -24,6 +25,7 @@ server.errorHandler(() => import('#exceptions/handler'))
  * the request URL.
  */
 server.use([
+  () => import('@adonisjs/cors/cors_middleware'),
   () => import('#middleware/container_bindings_middleware'),
   () => import('#middleware/force_json_response_middleware'),
 ])

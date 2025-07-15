@@ -18,7 +18,16 @@ type MentorRegisterPayload = {
   experience: string
 }
 
-type RegisterPayload = StudentRegisterPayload | MentorRegisterPayload
+export interface RegisterPayload {
+    email: string
+    password: string
+    role: 'student' | 'mentor'
+    fullName?: string
+    grade?: string     // if student
+    className?: string     // if student
+    department?: string // if mentor
+    experience?: string // if mentor
+  }
 
 type LoginResponse = {
   user: {
@@ -51,14 +60,20 @@ export async function register(payload: RegisterPayload): Promise<LoginResponse>
 }
 
 export async function askBot(token: string, question: string): Promise<{ answer: string }> {
-  const res = await fetch(`${API_URL}/ask`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ question }),
-  })
-  if (!res.ok) throw new Error('Bot request failed')
-  return res.json()
-}
+    const res = await fetch(`${API_URL}/ask`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ question }),
+    })
+  
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => null)
+      const message = errorData?.message || `Bot request failed with status ${res.status}`
+      throw new Error(message)
+    }
+  
+    return res.json()
+  }
