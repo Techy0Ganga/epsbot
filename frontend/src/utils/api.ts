@@ -1,35 +1,20 @@
+// frontend/src/utils/api.ts
+
 const API_URL = 'http://localhost:3333'
 
 type Role = 'student' | 'mentor'
 
-type StudentRegisterPayload = {
-  email: string
-  password: string
-  role: 'student'
-  grade: string
-  className: string
+// Interface for the raw response from AdonisJS Login
+interface AdonisTokenResponse {
+  user: LoginResponse['user'];
+  // --- THIS IS THE FIX ---
+  // Replaced 'any' with 'unknown' to satisfy the linting rule.
+  // This is safer and requires type checks if you were to use these other properties.
+  token: { token: string; [key: string]: unknown };
 }
 
-type MentorRegisterPayload = {
-  email: string
-  password: string
-  role: 'mentor'
-  department: string
-  experience: string
-}
-
-export interface RegisterPayload {
-    email: string
-    password: string
-    role: 'student' | 'mentor'
-    fullName?: string
-    grade?: string     // if student
-    className?: string     // if student
-    department?: string // if mentor
-    experience?: string // if mentor
-  }
-
-type LoginResponse = {
+// Interface for the clean data the rest of our app will use
+export interface LoginResponse {
   user: {
     id: number
     email: string
@@ -39,41 +24,65 @@ type LoginResponse = {
   token: string
 }
 
+export interface RegisterPayload {
+  email: string
+  password: string
+  role: 'student' | 'mentor'
+  fullName?: string
+  grade?: string
+  className?: string
+  department?: string
+  experience?: number // This MUST be a number to match the backend
+  school: string
+}
+
 export async function login(email: string, password: string): Promise<LoginResponse> {
   const res = await fetch(`${API_URL}/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
   })
-  if (!res.ok) throw new Error('Login failed')
-  return res.json()
+
+  if (!res.ok) {
+    const errorBody = await res.json().catch(() => ({}))
+    throw new Error(errorBody.message || 'Invalid credentials or server error.')
+  }
+
+  const rawData: AdonisTokenResponse = await res.json()
+  return {
+    user: rawData.user,
+    token: rawData.token.token,
+  }
 }
 
-export async function register(payload: RegisterPayload): Promise<LoginResponse> {
+export async function register(payload: RegisterPayload): Promise<void> {
   const res = await fetch(`${API_URL}/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   })
-  if (!res.ok) throw new Error('Register failed')
-  return res.json()
+
+  if (!res.ok) {
+    const errorBody = await res.json().catch(() => ({}))
+    throw new Error(errorBody.message || 'Registration failed on the server.')
+  }
 }
 
 export async function askBot(token: string, question: string): Promise<{ answer: string }> {
-    const res = await fetch(`${API_URL}/ask`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ question }),
-    })
-  
-    if (!res.ok) {
-      const errorData = await res.json().catch(() => null)
-      const message = errorData?.message || `Bot request failed with status ${res.status}`
-      throw new Error(message)
-    }
-  
-    return res.json()
+  const res = await fetch(`${API_URL}/bot/ask`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ question }),
+  })
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => null)
+    const message = errorData?.message || `Bot request failed with status ${res.status}`
+    throw new Error(message)
   }
+
+  return res.json()
+}

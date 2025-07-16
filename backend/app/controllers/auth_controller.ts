@@ -41,7 +41,7 @@ export default class AuthController {
       if (role === 'student') {
         await user.related('studentProfile').create({ grade, className, school })
       } else if (role === 'mentor') {
-        await user.related('mentorProfile').create({ department, experience })
+        await user.related('mentorProfile').create({ department, experience, school })
       }
   
       return response.created({ user })
@@ -66,16 +66,17 @@ export default class AuthController {
   }
 //log out
 async logout({ auth, response }: HttpContext) {
-  // Get a typed instance of the 'api' authenticator.
-  // Because the middleware was fixed, TypeScript now knows this is valid.
-  const api = auth.use('api')
+  // Ensure the user is authenticated using the 'api' guard
+  await auth.use('api').authenticate()
 
-  // The 'auth' middleware guarantees that if this code runs, the user is authenticated.
-  // TypeScript now correctly infers that `currentAccessToken` exists.
-  const token = api.currentAccessToken!
+  // Get the authenticated user object
+  const user = auth.use('api').getUserOrFail()
 
-  // Delete the specific token that was used for this request.
-  await token.delete()
+  // Access the current access token from the user object
+  const token = user.currentAccessToken
+
+  // Delete the specific token that was used for this request
+  await User.accessTokens.delete(user, token.identifier)
 
   return response.ok({ message: 'Logged out successfully' })
 }

@@ -16,6 +16,7 @@ const StudentSignup = () => {
     confirmPassword: '',
     grade: '',
     className: '', // ✅ renamed from 'class' to match backend field
+    school: ''
   })
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
@@ -37,6 +38,7 @@ const StudentSignup = () => {
         fullName: `${formData.firstName} ${formData.lastName}`,
         grade: formData.grade,
         className: formData.className,
+        school:formData.school
       })
       navigate('/student-dashboard')
     } catch (error) {
@@ -119,6 +121,16 @@ const StudentSignup = () => {
                     placeholder="Class 8A"
                     value={formData.className}
                     onChange={(e) => setFormData({ ...formData, className: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="school">School</Label>
+                  <Input
+                    id="school"
+                    placeholder="Class 8A"
+                    value={formData.school}
+                    onChange={(e) => setFormData({ ...formData, school: e.target.value })}
                     required
                   />
                 </div>

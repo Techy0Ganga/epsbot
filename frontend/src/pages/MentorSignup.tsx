@@ -15,6 +15,7 @@ const MentorSignup = () => {
     confirmPassword: '',
     department: '',
     experience: '',
+    school: ''
   })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
@@ -38,7 +39,8 @@ const MentorSignup = () => {
         password: form.password,
         role: 'mentor',
         department: form.department,
-        experience: form.experience,
+        experience: Number(form.experience) || 0,
+        school: form.school,
       })
       navigate('/mentor-dashboard')
     } catch (err) {
@@ -104,6 +106,15 @@ const MentorSignup = () => {
                     id="experience"
                     value={form.experience}
                     onChange={(e) => setForm({ ...form, experience: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="school">School</Label>
+                  <Input
+                    id="school"
+                    value={form.school}
+                    onChange={(e) => setForm({ ...form, school: e.target.value })}
                     required
                   />
                 </div>
