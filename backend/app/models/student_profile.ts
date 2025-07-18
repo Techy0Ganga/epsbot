@@ -10,6 +10,9 @@ export default class StudentProfile extends BaseModel {
   declare userId: number
 
   @column()
+  declare fullName: string
+
+  @column()
   declare grade: string
 
   @column({ columnName: 'class_name' })
