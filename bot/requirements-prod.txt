@@ -17,7 +17,7 @@ idna==3.6
 Levenshtein==0.25.1
 numpy # Often used with ML/data
 pandas # Often used with ML/data
-pillow==10.2.0
+pillow
 psutil==5.9.8
 PyJWT==2.7.0
 python-dateutil==2.8.2
