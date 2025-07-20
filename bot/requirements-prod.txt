@@ -33,3 +33,4 @@ langchain-community
 chromadb
 gunicorn
 gevent
+uvicorn
