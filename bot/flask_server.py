@@ -4,6 +4,7 @@ from Agents.gemini_wrapper import ask_gemini
 import os
 import traceback # Import traceback to print detailed exceptions
 
+
 # --- Initialization ---
 vector_store = VectorStoreService()
 vector_store.load_documents([
@@ -127,5 +128,11 @@ def ask():
         return jsonify({'error': 'An internal error occurred in the bot server.', 'details': str(e)}), 500
 
 
+@app.route('/')
+def home():
+    return "Bot is alive!"
+
+
 if __name__ == '__main__':
-    app.run(port=8000, debug=True)
+    port = int(os.environ.get('PORT', 8080))
+    app.run(port=port, debug=True)
