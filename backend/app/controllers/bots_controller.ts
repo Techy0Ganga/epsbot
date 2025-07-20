@@ -8,6 +8,8 @@ import StudentProfile from '#models/student_profile'
 import MentorProfile from '#models/mentor_profile'
 import axios from 'axios'
 
+const botUrl = process.env.BOT_URL
+
 export default class BotController {
   async ask({ auth, request, response }: HttpContext) {
     const user = auth.use('api').user!
@@ -33,7 +35,7 @@ export default class BotController {
           chat_history: chatHistory,
         }
         console.log('Sending payload to Flask bot (Student):', payload)
-        const result = await axios.post('http://localhost:8000/ask', payload)
+        const result = await axios.post(`${botUrl}/ask`, payload)
 
         console.log('Received raw response from Flask bot:', result.data)
 
@@ -123,7 +125,7 @@ export default class BotController {
           data_context: data_context,
         }
         // console.log('Sending payload to Flask bot (Mentor):', payload)
-        const result = await axios.post('http://localhost:8000/ask', payload)
+        const result = await axios.post(`${botUrl}/ask`, payload)
     
         // console.log('Received raw response from Flask bot:', result.data)
     
@@ -172,7 +174,7 @@ export default class BotController {
 
       const system_prompt = `You are an expert academic advisor. Your task is to analyze a student's conversation with a tutoring bot. Based on the chat history provided, write a concise, one-sentence summary (max 25 words) of the student's current status. Focus on their main topic of interest, any struggles, or their level of understanding. For example: "The student is actively learning about robot controllers and seems to be grasping the core concepts." or "The student is struggling to understand the difference between sensors and actuators."`
 
-      const result = await axios.post('http://localhost:8000/ask', {
+      const result = await axios.post(`${botUrl}/ask`, {
         role: 'mentor',
         question: 'Generate a progress summary based on the provided chat history.',
         system_prompt: system_prompt,
