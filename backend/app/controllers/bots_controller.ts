@@ -71,54 +71,71 @@ export default class BotController {
         if (!mentor) {
           return response.unauthorized({ message: 'Mentor profile not found' })
         }
-
+    
         const students = await StudentProfile.query().where('school', mentor.school).preload('user')
-
+    
         if (students.length === 0) {
           return response.ok({ answer: 'It looks like there are no students assigned to your school yet.' })
         }
-
+    
+        // 1. EFFICIENTLY FETCH ALL RELEVANT CHATS AT ONCE
+        // Get an array of all student user IDs
+        const studentUserIds = students.map((s) => s.userId)
+        // Fetch all chats for those students in a single database query
+        const allChats = await StudentChat.query().whereIn('user_id', studentUserIds)
+    
         const data_context =
           `Here is the latest data for students at ${mentor.school}:\n\n` +
           students
-            .map(
-              (s) =>
+            .map((s) => {
+              // 2. FILTER THE FETCHED CHATS IN MEMORY (FAST)
+              // Filter the 'allChats' array for the current student's chats
+              const prompts = allChats
+                .filter((chat) => chat.userId === s.userId) // Use the correct key for joining
+                .map((chat) => `    - "${chat.question}"`) // Format each prompt
+                .join('\n')
+    
+              return (
                 `Student Record:\n` +
                 `  - ID: ${s.id}\n` +
                 `  - Name: ${s.user?.fullName || 'Name not recorded'}\n` +
                 `  - Grade: ${s.grade || 'Grade not set'}\n` +
                 `  - Class: ${s.className || 'Class not set'}\n` +
-                `  - Progress: ${s.progressSummary || 'Progress not yet available'}`
-            )
+                `  - Progress: ${s.progressSummary || 'Progress not yet available'}\n` +
+                // 3. CORRECTLY APPEND THE PROMPTS STRING
+                `  - Prompts:\n${prompts || '    - No prompts recorded.'}`
+              )
+            })
             .join('\n\n')
-
-        const system_prompt = `You are a friendly and helpful assistant for a school mentor. Your job is to answer the mentor's questions using the student data provided.
-- Summarize the data clearly and conversationally.
+    
+        const system_prompt = `You are an intelligent, concise assistant in an ONGOING CONVERSATION with a school mentor.
+- **Do not use opening pleasantries like "Hi there!" or "Hello!" after the first turn.**
+- **The user will provide data. Acknowledge you have it and get straight to the point.** Do not repeat the data back to the user unless they ask for a summary.
+- Your primary job is to answer the mentor's questions based on the provided student data and the conversation history.
+- Summarize data clearly and conversationally.
 - When you are asked for a general report, provide a bulleted list summarizing each student.
-- **Crucially, if information like a student's name or progress is missing, state that clearly but gently, for example: "Progress for [student name] hasn't been recorded yet."**
-- Do not just say "N/A" or "unavailable". Frame it as information that needs to be updated.
-- Base your answers *only* on the data provided below.`
-
+- Base your answers *only* on the data provided.`
+    
         const payload = {
           role: 'mentor',
           question: question,
           system_prompt: system_prompt,
           data_context: data_context,
         }
-        console.log('Sending payload to Flask bot (Mentor):', payload)
+        // console.log('Sending payload to Flask bot (Mentor):', payload)
         const result = await axios.post('http://localhost:8000/ask', payload)
-
-        console.log('Received raw response from Flask bot:', result.data)
-
+    
+        // console.log('Received raw response from Flask bot:', result.data)
+    
         const answer = result.data.answer
         if (answer === undefined) {
           console.error("Flask bot response is missing the 'answer' field.", result.data)
           return response.internalServerError({ answer: 'Sorry, the bot returned an invalid response.' })
         }
-
+    
         return response.ok({ answer })
       } catch (error) {
-        console.error('Error in BotController while calling Flask (Mentor):', error.message)
+        console.error('Error in BotController while calling Flask (Mentor):', error) // Log the full error
         if (axios.isAxiosError(error) && error.code === 'ECONNREFUSED') {
           return response.serviceUnavailable({
             answer: 'Sorry, the AI assistant is currently offline. Please try again later.',
