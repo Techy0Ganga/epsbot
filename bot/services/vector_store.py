@@ -12,7 +12,16 @@ from bot.services.embedding_api import BGEAPIEmbeddings
 class VectorStoreService:
     def __init__(self):
         self.embedder = BGEAPIEmbeddings(api_key=os.getenv("HF_API_KEY"))
-        self.db = None
+        
+        # This is the path where your disk is mounted on Render
+        db_path = "/data/chroma_db"
+
+        # Load the database from the files on the disk
+        self.db = Chroma(
+            persist_directory=db_path,
+            embedding_function=self.embedder
+        )
+        print("Successfully loaded ChromaDB from disk.")
 
 
 
