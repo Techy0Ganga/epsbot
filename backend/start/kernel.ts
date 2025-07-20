@@ -11,7 +11,7 @@
 
 import router from '@adonisjs/core/services/router'
 import server from '@adonisjs/core/services/server'
-import cors from '@adonisjs/cors/cors_middleware'
+// import cors from '@adonisjs/cors/cors_middleware'
 
 /**
  * The error handler is used to convert an exception
